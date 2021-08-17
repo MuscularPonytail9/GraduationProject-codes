@@ -1,0 +1,55 @@
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs/imgcodecs.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/objdetect.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/video.hpp>
+#include <iostream>
+
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char** argv) {
+
+
+    VideoCapture cap(0);
+    Mat img;    
+    Mat imgBGS;
+    Mat blur;
+    Ptr<BackgroundSubtractor> BackSub;
+    int whitePixNum = 0;
+    int t = 0;
+    BackSub = createBackgroundSubtractorMOG2(5000, 600.0, false);
+    
+    while (true) {
+        cap.read(img);
+        GaussianBlur(img, blur, Size(5, 5), 5, 0);
+        BackSub->apply(blur, imgBGS, 0);
+        Mat ROI(imgBGS, Rect(230, 20, 200, 400));
+        //imshow("Cam", img);
+        //imshow("BGS", imgBGS);
+        //imshow("roi", ROI);
+        for (int x = 0; x < ROI.rows; x++) {
+            for (int y = 0; y < ROI.cols; y++) {
+                if (ROI.at<uchar>(x, y) == 255) {
+                    whitePixNum++;
+
+                }
+            }
+        }
+        if (whitePixNum > 10000) {
+            t++;
+        }
+        else {
+            t = 0;
+        }
+        whitePixNum = 0;
+        cout << t << endl;
+        if (t > 150) {
+            return 0;
+        }
+        waitKey(1);
+    }
+}
